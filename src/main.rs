@@ -2,24 +2,26 @@
 #![no_main]
 
 use core::panic::PanicInfo;
+use core::fmt::Write;
+use vga_buffer::WRITER;
+
+mod vga_buffer;
+
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-   loop {}
+fn panic(info: &PanicInfo) -> ! {
+    println!("Kernel Panic!");
+    println!("{}", info);
+    loop {}
 }
-
-static HELLO: &[u8] = b"Hello World!";
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-   let vga_buffer = 0xb8000 as *mut u8;
+    WRITER.lock().write_str("Hello again").unwrap();
+    write!(WRITER.lock(), ", some numbers: {} {}", 42, 1.337).unwrap();
+    println!("some numbers: {} {}", 42, 1.337);
+    println!("Hello, World{}", "!");
+    println!("Hello Universe!!");
 
-   for (i, &byte) in HELLO.iter().enumerate() {
-      unsafe {
-         *vga_buffer.offset(i as isize * 2) = byte;
-         *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
-      }
-   }
-
-   loop {}
+    loop {}
 }
